@@ -2723,7 +2723,7 @@ SMODS.Joker{
 
     calculate = function(self, card, context)
     recheckTwitch()
-    card.ability.extra.followercount = G.yahifollowers * math.floor(card.ability.extra.perfollow/1000)
+    card.ability.extra.followercount = math.floor(G.yahifollowers * card.ability.extra.perfollow / 1000)
     if context.joker_main then
         return {
             color = G.C.BLUE,
