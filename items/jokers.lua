@@ -2727,7 +2727,7 @@ SMODS.Joker{
     if context.joker_main then
         return {
             color = G.C.BLUE,
-            message = "+".. card.ability.extra.perfollow,
+            message = "+".. card.ability.extra.followercount,
             chip_mod = card.ability.extra.followercount
         }
     end
@@ -3359,6 +3359,10 @@ SMODS.Joker{
                 sound = "slice1",
                 }
             end
+        elseif context.joker_main then
+            return {
+                mult = card.ability.extra.multtotal
+            }
         end
     end,
 
