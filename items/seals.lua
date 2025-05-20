@@ -161,13 +161,13 @@ SMODS.Seal {
         name = 'iFunny watermark',
         text = {
             'Retriggers once',
-            '{C:green}1 in 3{} chance to',
+            '{C:green}#1# in 3{} chance to',
             'crop watermark out',
         }
     },
 
     loc_vars = function(self, info_queue)
-        return { vars = {self.config.mult, self.config.chips, self.config.money, self.config.x_mult, } }
+        return { vars = {G.GAME.probabilities.normal, self.config.mult, self.config.chips, self.config.money, self.config.x_mult, } }
     end,
     atlas = "ifunny_seal",
     pos = {x=0, y=0},
@@ -179,7 +179,7 @@ SMODS.Seal {
 
                 repetitions = 1,
                 G.E_MANAGER:add_event(Event({func = function()
-                if math.random(1,3) == 1 then 
+                if pseudorandom('ifunny') < (G.GAME.probabilities.normal / 3) then 
                     card.seal = nil 
                     card_eval_status_text(card,'extra',nil,nil,nil,{message = "Cropped!"})
                     play_sound("cardFan2")

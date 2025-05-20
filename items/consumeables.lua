@@ -525,10 +525,14 @@ SMODS.Consumable({
     loc_txt = {
         name = "is that yaha mouse",
         text={
-        "{C:green}1 in 100 chance",
+        "{C:green}#1# in #2# chance",
         "to spawn {C:attention}Yahiamice{}",
         },
     },
+    config = {chance = 100},
+    loc_vars = function(self, info_queue, card)
+        return {vars = {G.GAME.probabilities.normal, (card.ability or self.config).chance}}
+    end,
 	
 	
 	pos = {x=2, y= 2},
@@ -538,13 +542,29 @@ SMODS.Consumable({
     cost = 4,
 
     use = function(self, card, area, copier)
-        if math.random(1,100) == 1 then
+        if pseudorandom('yahimod_yahamouse') < (G.GAME.probabilities.normal / card.ability.chance) then
             local card = create_card('Joker', G.Jokers, nil, nil, nil, nil, 'j_yahimod_yahicard', 'yahamouse')
             card:add_to_deck()
             G.jokers:emplace(card)
             play_sound("yahimod_jackpot")
         else
-            return{message = "Nope!"}
+            -- copied from wheel of fortune
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                attention_text({
+                    text = localize('k_nope_ex'),
+                    scale = 1.3, 
+                    hold = 1.4,
+                    major = card,
+                    backdrop_colour = G.C.SECONDARY_SET.Tarot,
+                    align = (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK) and 'tm' or 'cm',
+                    offset = {x = 0, y = (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK) and -0.2 or 0},
+                    silent = true
+                    })
+                    G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.06*G.SETTINGS.GAMESPEED, blockable = false, blocking = false, func = function()
+                        play_sound('tarot2', 0.76, 0.4);return true end}))
+                    play_sound('tarot2', 1, 0.4)
+                    card:juice_up(0.3, 0.5)
+            return true end }))
         end
     end,
 
@@ -573,10 +593,14 @@ SMODS.Consumable({
     loc_txt = {
         name = "Fortune Of Wheel",
         text={
-        "{C:green}1 in 1000 chance",
+        "{C:green}#1# in #2# chance",
         "to gain {C:attention}$1,000,000{}",
         },
     },
+    config = {chance = 1000},
+    loc_vars = function(self, info_queue, card)
+        return {vars = {G.GAME.probabilities.normal, (card.ability or self.config).chance}}
+    end,
 	
 	
 	pos = {x=3, y= 2},
@@ -586,11 +610,26 @@ SMODS.Consumable({
     cost = 4,
 
     use = function(self, card, area, copier)
-        if math.random(1,1000) == 1 then
+        if pseudorandom('yahimod_fortune') < (G.GAME.probabilities.normal / card.ability.chance) then
             play_sound("yahimod_jackpot")
             ease_dollars(1000000)
         else
-            return{message = "Nope!"}
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                attention_text({
+                    text = localize('k_nope_ex'),
+                    scale = 1.3, 
+                    hold = 1.4,
+                    major = card,
+                    backdrop_colour = G.C.SECONDARY_SET.Tarot,
+                    align = (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK) and 'tm' or 'cm',
+                    offset = {x = 0, y = (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK) and -0.2 or 0},
+                    silent = true
+                    })
+                    G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.06*G.SETTINGS.GAMESPEED, blockable = false, blocking = false, func = function()
+                        play_sound('tarot2', 0.76, 0.4);return true end}))
+                    play_sound('tarot2', 1, 0.4)
+                    card:juice_up(0.3, 0.5)
+            return true end }))
         end
     end,
 

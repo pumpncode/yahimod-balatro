@@ -1065,9 +1065,9 @@ SMODS.Joker{
         name = 'Sisyphean Joker',
         text = { "Gains {X:mult,C:white} X#2#{} Mult",
                     "every round",
-                    "1 in 4 chance to reset",
+                    "{C:green}#3# in #4#{} chance to reset",
                     "back to {X:mult,C:white}X1{} Mult",
-                    "{C:inactive}(Currently {X:mult,C:white}X#1# {C:inactive}Mult)",}
+                    "{C:inactive}(Currently {X:mult,C:white}X#1#{C:inactive} Mult)",}
     },
     atlas = 'sisyphus',
     rarity = 2,
@@ -1081,10 +1081,10 @@ SMODS.Joker{
     perishable_compat = false,
 
     pos = {x=0, y= 0},
-    config = { extra = {xmult = 1.5, additional = 0.5}},
+    config = { extra = {xmult = 1.5, additional = 0.5, chance = 4}},
 
     loc_vars = function(self, info_queue, center)
-		return { vars = { center.ability.extra.xmult, center.ability.extra.additional }  }
+		return { vars = { center.ability.extra.xmult, center.ability.extra.additional, G.GAME.probabilities.normal, center.ability.extra.chance }  }
 	end,
 
     calculate = function(self, card, context)
@@ -1095,7 +1095,7 @@ SMODS.Joker{
 			}
         end
         if context.setting_blind then
-            if math.random(4) ~= 1 then
+            if pseudorandom('sisyphus') < (G.GAME.probabilities.normal / card.ability.extra.chance) then
                 card.ability.extra.xmult = card.ability.extra.xmult + card.ability.extra.additional
                 return {
                     message = "Upgrade!",
@@ -1555,7 +1555,7 @@ SMODS.Joker{
         text = { "{C:blue}+#1#{} Chips",
                     "for every {C:attention}vowel in the",
                     "name of the card to its right",
-                    "{C:inactive}Currently {C:blue}+#2#{} Chips",}
+                    "{C:inactive}Currently {C:blue}+#2#{C:inactive} Chips",}
     },
     atlas = 'leo',
     rarity = 2,
@@ -1855,7 +1855,7 @@ SMODS.Joker{
         text = { "{X:mult,C:white}X#1#{} Mult",
                     "for every {C:attention}cat joker",
                     "in your possession",
-                    "Currently {X:mult,C:white}X#2#{} Mult",}
+                    "{C:inactive}Currently {X:mult,C:white}X#2#{C:inactive} Mult",}
     },
     atlas = 'joel',
     rarity = 2,
@@ -2112,7 +2112,7 @@ SMODS.Joker{
                     "Sets your shop slots to {C:attention}9",
                     "The more you reroll, the more likely",
                     "{C:dark_edition}Negative{} cards show up",
-                    "{C:inactive}(Currently{} {C:dark_edition}#2#% odds)",
+                    "{C:inactive}(Currently{} {C:dark_edition}#2#%{C:inactive} odds)",
     },},
     atlas = 'yahicard',
     rarity = 4,
@@ -2393,7 +2393,7 @@ SMODS.Joker{
         text = { "Earn {C:attention}$#1#{} at end of round",
                     "if your jokers are ordered by",
                     "name length (shortest to longest)",
-                    "{C:inactive}Currently{} #2#"}
+                    "{C:inactive}Currently #2#"}
     },
     atlas = 'ocd',
     rarity = 2,
@@ -2466,7 +2466,7 @@ SMODS.Joker{
     loc_txt= {
         name = 'Dame Dane',
         text = { "{C:red}+#1#{} mult",
-                    "1 in 6{} chance",
+                    "{C:green}#2# in #3#{} chance",
                     "to crash the game"}
     },
     atlas = 'damedane',
@@ -2482,10 +2482,10 @@ SMODS.Joker{
     perishable_compat = false,
 
     pos = {x=0, y= 0},
-    config = { extra = {mult = 20}},
+    config = { extra = {mult = 20, chance = 6}},
     
     loc_vars = function(self, info_queue, center)
-		return { vars = { center.ability.extra.mult}  }
+		return { vars = { center.ability.extra.mult, G.GAME.probabilities.normal, center.ability.extra.chance }  }
 	end,
 
 
@@ -2576,7 +2576,7 @@ SMODS.Joker{
     loc_txt= {
         name = 'Adobe Premiere',
         text = { "{X:mult,C:white}X#1#{} mult",
-                    "1 in 6{} chance",
+                    "{C:green}#2# in #3#{} chance",
                     "to crash the game"}
     },
     atlas = 'adobepremiere',
@@ -2593,16 +2593,16 @@ SMODS.Joker{
     perishable_compat = false,
 
     pos = {x=0, y= 0},
-    config = { extra = {xmult = 2}},
+    config = { extra = {xmult = 2, chance=6}},
     
     loc_vars = function(self, info_queue, center)
-		return { vars = { center.ability.extra.xmult}  }
+		return { vars = { center.ability.extra.xmult, G.GAME.probabilities.normal, center.ability.extra.chance}  }
 	end,
 
 
     calculate = function(self, card, context)
     if context.joker_main then
-        if math.random(1,6) == 1 then crashGame() end
+        if pseudorandom('adobepremiere') < (G.GAME.probabilities.normal / card.ability.extra.chance) then crashGame() end
         return {
             color = G.C.RED,
             message = "x".. card.ability.extra.xmult,
@@ -2714,7 +2714,7 @@ SMODS.Joker{
     perishable_compat = false,
 
     pos = {x=0, y= 0},
-    config = { extra = {perfollow = 1, followercount = G.yahifollowers/1000 }},
+    config = { extra = {perfollow = 1, followercount = math.floor(G.yahifollowers/1000) }},
     
     loc_vars = function(self, info_queue, center)
 		return { vars = { center.ability.extra.perfollow , center.ability.extra.followercount}  }
@@ -2723,11 +2723,11 @@ SMODS.Joker{
 
     calculate = function(self, card, context)
     recheckTwitch()
-    card.ability.extra.followercount = G.yahifollowers * card.ability.extra.perfollow/1000
+    card.ability.extra.followercount = math.floor(G.yahifollowers * card.ability.extra.perfollow / 1000)
     if context.joker_main then
         return {
             color = G.C.BLUE,
-            message = "+".. card.ability.extra.perfollow,
+            message = "+".. card.ability.extra.followercount,
             chip_mod = card.ability.extra.followercount
         }
     end
@@ -2756,7 +2756,7 @@ SMODS.Joker{
         text = { "{C:red}+#1#{} Mult for every 5",
                     "viewers currently watching",
                     "{C:attention}Yahiamice on {C:dark_edition}Twitch",
-                    "{C:inactive}Currently {C:red}+#2#{} Mult"}
+                    "{C:inactive}Currently {C:red}+#2#{C:inactive} Mult"}
     },
     atlas = 'twitchstream',
     rarity = 3,
@@ -2809,7 +2809,7 @@ SMODS.Joker{
                 "when {C:attention}Blind{} is selected, and adds",
                 "half its {C:attention}sell value{} to this",
                 "Joker's end-of-round payout",
-                "({C:inactive}Currently {C:attention}$#1#)"}
+                "{C:inactive}(Currently {C:attention}$#1#{C:inactive})"}
     },
     atlas = 'blingblingbear',
     rarity = 3,
@@ -3359,6 +3359,10 @@ SMODS.Joker{
                 sound = "slice1",
                 }
             end
+        elseif context.joker_main then
+            return {
+                mult = card.ability.extra.multtotal
+            }
         end
     end,
 
@@ -4471,7 +4475,7 @@ SMODS.Joker{
     loc_txt= {
         name = 'Worn Down Gaming Chair',
         text = { "{C:blue}+#1#{} chips and {C:red}+#2#{} Mult",
-                    "{C:green}1 in 4{} chance to break down",
+                    "{C:green}#3# in 4{} chance to break down",
                     "when blind is selected",}
     },
     atlas = 'schmeebchair',
@@ -4487,15 +4491,15 @@ SMODS.Joker{
     perishable_compat = false,
 
     pos = {x=0, y= 0},
-    config = { extra = {chips = 10, mult = 2}},
+    config = { extra = {chips = 10, mult = 2, chance = 4}},
 
     loc_vars = function(self, info_queue, center)
-		return { vars = { center.ability.extra.chips, center.ability.extra.mult }  }
+		return { vars = { center.ability.extra.chips, center.ability.extra.mult, G.GAME.probabilities.normal }  }
 	end,
     
     calculate = function(self, card, context)
         if context.setting_blind then
-            if math.random(1,4) == 1 then
+            if pseudorandom('schmeebchair') < (G.GAME.probabilities.normal / card.ability.extra.chance) then
                 explodeCard(card)
             end
         end
@@ -4917,7 +4921,7 @@ SMODS.Joker{
     key = 'mimearon',
     loc_txt= {
         name = 'Mimaron',
-        text = { "All Red Seal Steel Kings",
+        text = { "All {C:attention}Red Seal Steel Kings{}",
                     "held in hand grant {X:mult,C:white}X#1#{} Mult",}
     },
     atlas = 'mimearon',
