@@ -1065,9 +1065,9 @@ SMODS.Joker{
         name = 'Sisyphean Joker',
         text = { "Gains {X:mult,C:white} X#2#{} Mult",
                     "every round",
-                    "1 in 4 chance to reset",
+                    "{C:green}1 in 4{} chance to reset",
                     "back to {X:mult,C:white}X1{} Mult",
-                    "{C:inactive}(Currently {X:mult,C:white}X#1# {C:inactive}Mult)",}
+                    "{C:inactive}(Currently {X:mult,C:white}X#1#{C:inactive} Mult)",}
     },
     atlas = 'sisyphus',
     rarity = 2,
@@ -1555,7 +1555,7 @@ SMODS.Joker{
         text = { "{C:blue}+#1#{} Chips",
                     "for every {C:attention}vowel in the",
                     "name of the card to its right",
-                    "{C:inactive}Currently {C:blue}+#2#{} Chips",}
+                    "{C:inactive}Currently {C:blue}+#2#{C:inactive} Chips",}
     },
     atlas = 'leo',
     rarity = 2,
@@ -1855,7 +1855,7 @@ SMODS.Joker{
         text = { "{X:mult,C:white}X#1#{} Mult",
                     "for every {C:attention}cat joker",
                     "in your possession",
-                    "Currently {X:mult,C:white}X#2#{} Mult",}
+                    "{C:inactive}Currently {X:mult,C:white}X#2#{C:inactive} Mult",}
     },
     atlas = 'joel',
     rarity = 2,
@@ -2112,7 +2112,7 @@ SMODS.Joker{
                     "Sets your shop slots to {C:attention}9",
                     "The more you reroll, the more likely",
                     "{C:dark_edition}Negative{} cards show up",
-                    "{C:inactive}(Currently{} {C:dark_edition}#2#% odds)",
+                    "{C:inactive}(Currently{} {C:dark_edition}#2#%{C:inactive} odds)",
     },},
     atlas = 'yahicard',
     rarity = 4,
@@ -2393,7 +2393,7 @@ SMODS.Joker{
         text = { "Earn {C:attention}$#1#{} at end of round",
                     "if your jokers are ordered by",
                     "name length (shortest to longest)",
-                    "{C:inactive}Currently{} #2#"}
+                    "{C:inactive}Currently #2#"}
     },
     atlas = 'ocd',
     rarity = 2,
@@ -2466,7 +2466,7 @@ SMODS.Joker{
     loc_txt= {
         name = 'Dame Dane',
         text = { "{C:red}+#1#{} mult",
-                    "1 in 6{} chance",
+                    "{C:green}1 in 6{} chance",
                     "to crash the game"}
     },
     atlas = 'damedane',
@@ -2576,7 +2576,7 @@ SMODS.Joker{
     loc_txt= {
         name = 'Adobe Premiere',
         text = { "{X:mult,C:white}X#1#{} mult",
-                    "1 in 6{} chance",
+                    "{C:green}1 in 6{} chance",
                     "to crash the game"}
     },
     atlas = 'adobepremiere',
@@ -2756,7 +2756,7 @@ SMODS.Joker{
         text = { "{C:red}+#1#{} Mult for every 5",
                     "viewers currently watching",
                     "{C:attention}Yahiamice on {C:dark_edition}Twitch",
-                    "{C:inactive}Currently {C:red}+#2#{} Mult"}
+                    "{C:inactive}Currently {C:red}+#2#{C:inactive} Mult"}
     },
     atlas = 'twitchstream',
     rarity = 3,
@@ -2809,7 +2809,7 @@ SMODS.Joker{
                 "when {C:attention}Blind{} is selected, and adds",
                 "half its {C:attention}sell value{} to this",
                 "Joker's end-of-round payout",
-                "({C:inactive}Currently {C:attention}$#1#)"}
+                "{C:inactive}(Currently {C:attention}$#1#{C:inactive})"}
     },
     atlas = 'blingblingbear',
     rarity = 3,
@@ -4921,7 +4921,7 @@ SMODS.Joker{
     key = 'mimearon',
     loc_txt= {
         name = 'Mimaron',
-        text = { "All Red Seal Steel Kings",
+        text = { "All {C:attention}Red Seal Steel Kings{}",
                     "held in hand grant {X:mult,C:white}X#1#{} Mult",}
     },
     atlas = 'mimearon',
