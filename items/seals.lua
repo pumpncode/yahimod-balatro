@@ -167,7 +167,7 @@ SMODS.Seal {
     },
 
     loc_vars = function(self, info_queue)
-        return { vars = {G.game.probabilities.normal, self.config.mult, self.config.chips, self.config.money, self.config.x_mult, } }
+        return { vars = {G.GAME.probabilities.normal, self.config.mult, self.config.chips, self.config.money, self.config.x_mult, } }
     end,
     atlas = "ifunny_seal",
     pos = {x=0, y=0},

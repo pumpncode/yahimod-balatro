@@ -1084,7 +1084,7 @@ SMODS.Joker{
     config = { extra = {xmult = 1.5, additional = 0.5, chance = 4}},
 
     loc_vars = function(self, info_queue, center)
-		return { vars = { center.ability.extra.xmult, center.ability.extra.additional, G.game.probabilities.normal, center.ability.extra.chance }  }
+		return { vars = { center.ability.extra.xmult, center.ability.extra.additional, G.GAME.probabilities.normal, center.ability.extra.chance }  }
 	end,
 
     calculate = function(self, card, context)
@@ -1095,7 +1095,7 @@ SMODS.Joker{
 			}
         end
         if context.setting_blind then
-            if pseudorandom('sisyphus') < (G.game.probabilities.normal / card.ability.extra.chance) then
+            if pseudorandom('sisyphus') < (G.GAME.probabilities.normal / card.ability.extra.chance) then
                 card.ability.extra.xmult = card.ability.extra.xmult + card.ability.extra.additional
                 return {
                     message = "Upgrade!",
@@ -2485,7 +2485,7 @@ SMODS.Joker{
     config = { extra = {mult = 20, chance = 6}},
     
     loc_vars = function(self, info_queue, center)
-		return { vars = { center.ability.extra.mult, G.game.probabilities.normal, center.ability.extra.chance }  }
+		return { vars = { center.ability.extra.mult, G.GAME.probabilities.normal, center.ability.extra.chance }  }
 	end,
 
 
@@ -2596,13 +2596,13 @@ SMODS.Joker{
     config = { extra = {xmult = 2, chance=6}},
     
     loc_vars = function(self, info_queue, center)
-		return { vars = { center.ability.extra.xmult, G.game.probabilities.normal, center.ability.extra.chance}  }
+		return { vars = { center.ability.extra.xmult, G.GAME.probabilities.normal, center.ability.extra.chance}  }
 	end,
 
 
     calculate = function(self, card, context)
     if context.joker_main then
-        if pseudorandom('adobepremiere') < (G.game.probabilities.normal / card.ability.extra.chance) then crashGame() end
+        if pseudorandom('adobepremiere') < (G.GAME.probabilities.normal / card.ability.extra.chance) then crashGame() end
         return {
             color = G.C.RED,
             message = "x".. card.ability.extra.xmult,
@@ -2714,7 +2714,7 @@ SMODS.Joker{
     perishable_compat = false,
 
     pos = {x=0, y= 0},
-    config = { extra = {perfollow = 1, followercount = G.yahifollowers/1000 }},
+    config = { extra = {perfollow = 1, followercount = math.floor(G.yahifollowers/1000) }},
     
     loc_vars = function(self, info_queue, center)
 		return { vars = { center.ability.extra.perfollow , center.ability.extra.followercount}  }
@@ -2723,7 +2723,7 @@ SMODS.Joker{
 
     calculate = function(self, card, context)
     recheckTwitch()
-    card.ability.extra.followercount = G.yahifollowers * card.ability.extra.perfollow/1000
+    card.ability.extra.followercount = G.yahifollowers * math.floor(card.ability.extra.perfollow/1000)
     if context.joker_main then
         return {
             color = G.C.BLUE,
@@ -4494,7 +4494,7 @@ SMODS.Joker{
     config = { extra = {chips = 10, mult = 2, chance = 4}},
 
     loc_vars = function(self, info_queue, center)
-		return { vars = { center.ability.extra.chips, center.ability.extra.mult, G.game.probabilities.normal }  }
+		return { vars = { center.ability.extra.chips, center.ability.extra.mult, G.GAME.probabilities.normal }  }
 	end,
     
     calculate = function(self, card, context)
