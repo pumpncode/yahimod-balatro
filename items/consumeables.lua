@@ -525,10 +525,14 @@ SMODS.Consumable({
     loc_txt = {
         name = "is that yaha mouse",
         text={
-        "{C:green}1 in 100 chance",
+        "{C:green}#1# in #2# chance",
         "to spawn {C:attention}Yahiamice{}",
         },
     },
+    config = {chance = 100},
+    loc_vars = function(self, info_queue, card)
+        return {vars = {G.game.probabilities.normal, (card.ability or self.config).chance}}
+    end,
 	
 	
 	pos = {x=2, y= 2},
@@ -538,7 +542,7 @@ SMODS.Consumable({
     cost = 4,
 
     use = function(self, card, area, copier)
-        if math.random(1,100) == 1 then
+        if pseudorandom('yahimod_yahamouse') < (G.game.probabilities.normal / card.ability.chance) then
             local card = create_card('Joker', G.Jokers, nil, nil, nil, nil, 'j_yahimod_yahicard', 'yahamouse')
             card:add_to_deck()
             G.jokers:emplace(card)
@@ -573,10 +577,14 @@ SMODS.Consumable({
     loc_txt = {
         name = "Fortune Of Wheel",
         text={
-        "{C:green}1 in 1000 chance",
+        "{C:green}#1# in #2# chance",
         "to gain {C:attention}$1,000,000{}",
         },
     },
+    config = {chance = 1000},
+    loc_vars = function(self, info_queue, card)
+        return {vars = {G.game.probabilities.normal, (card.ability or self.config).chance}}
+    end,
 	
 	
 	pos = {x=3, y= 2},
@@ -586,7 +594,7 @@ SMODS.Consumable({
     cost = 4,
 
     use = function(self, card, area, copier)
-        if math.random(1,1000) == 1 then
+        if pseudorandom('yahimod_fortune') < (G.game.probabilities.normal / card.ability.chance) then
             play_sound("yahimod_jackpot")
             ease_dollars(1000000)
         else

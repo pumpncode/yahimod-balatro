@@ -1065,7 +1065,7 @@ SMODS.Joker{
         name = 'Sisyphean Joker',
         text = { "Gains {X:mult,C:white} X#2#{} Mult",
                     "every round",
-                    "{C:green}1 in 4{} chance to reset",
+                    "{C:green}#3# in #4#{} chance to reset",
                     "back to {X:mult,C:white}X1{} Mult",
                     "{C:inactive}(Currently {X:mult,C:white}X#1#{C:inactive} Mult)",}
     },
@@ -1081,10 +1081,10 @@ SMODS.Joker{
     perishable_compat = false,
 
     pos = {x=0, y= 0},
-    config = { extra = {xmult = 1.5, additional = 0.5}},
+    config = { extra = {xmult = 1.5, additional = 0.5, chance = 4}},
 
     loc_vars = function(self, info_queue, center)
-		return { vars = { center.ability.extra.xmult, center.ability.extra.additional }  }
+		return { vars = { center.ability.extra.xmult, center.ability.extra.additional, G.game.probabilities.normal, center.ability.extra.chance }  }
 	end,
 
     calculate = function(self, card, context)
@@ -1095,7 +1095,7 @@ SMODS.Joker{
 			}
         end
         if context.setting_blind then
-            if math.random(4) ~= 1 then
+            if pseudorandom('sisyphus') < (G.game.probabilities.normal / card.ability.extra.chance) then
                 card.ability.extra.xmult = card.ability.extra.xmult + card.ability.extra.additional
                 return {
                     message = "Upgrade!",
@@ -2466,7 +2466,7 @@ SMODS.Joker{
     loc_txt= {
         name = 'Dame Dane',
         text = { "{C:red}+#1#{} mult",
-                    "{C:green}1 in 6{} chance",
+                    "{C:green}#2# in #3#{} chance",
                     "to crash the game"}
     },
     atlas = 'damedane',
@@ -2482,10 +2482,10 @@ SMODS.Joker{
     perishable_compat = false,
 
     pos = {x=0, y= 0},
-    config = { extra = {mult = 20}},
+    config = { extra = {mult = 20, chance = 6}},
     
     loc_vars = function(self, info_queue, center)
-		return { vars = { center.ability.extra.mult}  }
+		return { vars = { center.ability.extra.mult, G.game.probabilities.normal, center.ability.extra.chance }  }
 	end,
 
 
@@ -2576,7 +2576,7 @@ SMODS.Joker{
     loc_txt= {
         name = 'Adobe Premiere',
         text = { "{X:mult,C:white}X#1#{} mult",
-                    "{C:green}1 in 6{} chance",
+                    "{C:green}#2# in #3#{} chance",
                     "to crash the game"}
     },
     atlas = 'adobepremiere',
@@ -2593,16 +2593,16 @@ SMODS.Joker{
     perishable_compat = false,
 
     pos = {x=0, y= 0},
-    config = { extra = {xmult = 2}},
+    config = { extra = {xmult = 2, chance=6}},
     
     loc_vars = function(self, info_queue, center)
-		return { vars = { center.ability.extra.xmult}  }
+		return { vars = { center.ability.extra.xmult, G.game.probabilities.normal, center.ability.extra.chance}  }
 	end,
 
 
     calculate = function(self, card, context)
     if context.joker_main then
-        if math.random(1,6) == 1 then crashGame() end
+        if pseudorandom('adobepremiere') < (G.game.probabilities.normal / card.ability.extra.chance) then crashGame() end
         return {
             color = G.C.RED,
             message = "x".. card.ability.extra.xmult,
@@ -4475,7 +4475,7 @@ SMODS.Joker{
     loc_txt= {
         name = 'Worn Down Gaming Chair',
         text = { "{C:blue}+#1#{} chips and {C:red}+#2#{} Mult",
-                    "{C:green}1 in 4{} chance to break down",
+                    "{C:green}#3# in 4{} chance to break down",
                     "when blind is selected",}
     },
     atlas = 'schmeebchair',
@@ -4491,15 +4491,15 @@ SMODS.Joker{
     perishable_compat = false,
 
     pos = {x=0, y= 0},
-    config = { extra = {chips = 10, mult = 2}},
+    config = { extra = {chips = 10, mult = 2, chance = 4}},
 
     loc_vars = function(self, info_queue, center)
-		return { vars = { center.ability.extra.chips, center.ability.extra.mult }  }
+		return { vars = { center.ability.extra.chips, center.ability.extra.mult, G.game.probabilities.normal }  }
 	end,
     
     calculate = function(self, card, context)
         if context.setting_blind then
-            if math.random(1,4) == 1 then
+            if pseudorandom('schmeebchair') < (G.GAME.probabilities.normal / card.ability.extra.chance) then
                 explodeCard(card)
             end
         end
