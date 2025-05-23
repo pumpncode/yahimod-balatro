@@ -58,6 +58,8 @@ G.last_update_time = 0
 function recheckTwitch(please)
 
     if ((os.time() - G.last_update_time) >= 90) or please == "please" then
+        G.yahiviewers = 0
+        G.yahifollowers = 111000
         G.last_update_time = os.time()
         local json = require "json"
         local succ, https = pcall(require, "SMODS.https")
@@ -75,9 +77,6 @@ function recheckTwitch(please)
         local status, body, headers = https.request(url, options)
         if status ~= 200 then
             print("Can't connect to Twitch! Are you offline? Is Twitch being blocked by a firewall?")
-            G.yahiviewers = 0
-            G.yahifollowers = 111000
-            G.twitchfunctionality = false
         else
             G.twitchbodyjson = json.decode(body)
             G.yahifollowers = G.twitchbodyjson[1].data.user.followers.totalCount
