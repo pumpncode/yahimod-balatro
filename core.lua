@@ -73,13 +73,19 @@ function recheckTwitch(please)
         }
 
         local status, body, headers = https.request(url, options)
-        G.twitchbodyjson = json.decode(body)
-        G.yahifollowers = G.twitchbodyjson[1].data.user.followers.totalCount
-        G.yahiviewers = 0
-        if G.twitchbodyjson[1].data.user.stream then G.yahiviewers = G.twitchbodyjson[1].data.user.stream.viewersCount else print("Failed to parse yahi's viewer count! Maybe he's offline?") end
+        if status ~= 200 then
+            print("Can't connect to Twitch! Are you offline? Is Twitch being blocked by a firewall?")
+            G.yahiviewers = 0
+            G.yahifollowers = 111000
+        else
+            G.twitchbodyjson = json.decode(body)
+            G.yahifollowers = G.twitchbodyjson[1].data.user.followers.totalCount
+            G.yahiviewers = 0
+            if G.twitchbodyjson[1].data.user.stream then G.yahiviewers = G.twitchbodyjson[1].data.user.stream.viewersCount else print("Failed to parse yahi's viewer count! Maybe he's offline?") end
+        end
     else
-		--print("Can't update! Wait " .. (90 - (os.time() - G.last_update_time)) .. " more seconds please...")
-	end
+        --print("Can't update! Wait " .. (90 - (os.time() - G.last_update_time)) .. " more seconds please...")
+    end
 end
 
 
