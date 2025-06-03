@@ -1,9 +1,3 @@
---- STEAMODDED HEADER
---- MOD_NAME: Yahimod
---- MOD_ID: Yahimod
---- MOD_AUTHOR: Yahiamice
---- MOD_DESCRIPTION: hi
---- PREFIX: yahi
 ----------------------------------------------------------
 ----------- MOD CODE -------------------------------------
 
