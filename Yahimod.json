@@ -17,7 +17,7 @@
 		"Balatro (>=1.0.1o)"
 	],
 	"conflicts": [
-	"Talisman (<=2.0.2)",
-	"Cryptid (<<0.5.4)",
+		"Talisman (<=2.0.2)",
+		"Cryptid (<<0.5.4)"
 	]
 }
