@@ -39,6 +39,7 @@ dinoLoad = function()
 
         G.dino.yvel = 0
         G.dino.obstacles = {}
+        G.dino.obspassed = 0
 
         G.dino.gamefloory = 400*_xscale
         G.dino.gameceily = 0*_yscale
@@ -67,7 +68,12 @@ dinoTick = function()
             if G.dino and G.dino.obstacles[i] then
                 local _ob = G.dino.obstacles[i]
                 _ob.obsx = _ob.obsx + _ob.obsxvel
-                if _ob.obsx < 0 then table.remove(G.dino.obstacles,i) end
+                if _ob.obsx < 0 then 
+                    table.remove(G.dino.obstacles,i)
+                    if G.dino.obspassed == nil then G.dino.obspassed = 0 end
+                    G.dino.obspassed = G.dino.obspassed + 1
+                    if G.dino.obspassed > 100 then check_for_unlock({ type = "ach_dinomaster" }) end 
+                end
                 if CheckCollision(G.dino.x, G.dino.y, G.dino.w, G.dino.h,  _ob.obsx+G.dino.cachbox_x, _ob.obsy+G.dino.cachbox_y, G.dino.cachbox_w, G.dino.cachbox_h) then
                     
                     playEffect("explosion",G.dino.x,G.dino.y)

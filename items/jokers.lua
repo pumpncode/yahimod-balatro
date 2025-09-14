@@ -116,6 +116,7 @@ SMODS.Joker{
 		end
         if context.individual and context.cardarea == G.play and context.other_card.ability.name == 'Lucky Card' and not context.other_card.lucky_trigger then
             card.ability.extra.Xmult = card.ability.extra.Xmult + card.ability.extra.additional
+            if card.ability.extra.Xmult >= 3 then check_for_unlock({ type = "ach_marxblep" }) end
             return {
                 message = "Unlucky!",
                 colour = G.C.RED
@@ -179,6 +180,7 @@ SMODS.Joker{
 
     calculate = function(self, card, context)
 		if context.joker_main and (card.ability.extra.Xmult > 1) then
+            if card.ability.extra.Xmult >= 20 then check_for_unlock({ type = "ach_lc" }) end
 			return {
 				message = localize({ type = "variable", key = "a_xmult", vars = { card.ability.extra.Xmult } }),
 				Xmult_mod = card.ability.extra.Xmult
@@ -263,6 +265,10 @@ SMODS.Joker{
 		if context.joker_main then
             local hasnine = false
             local hasten = false
+
+            local hastwo = false -- achievement check
+            local hasace = false
+
             for i = 1, #context.scoring_hand do
 				if context.full_hand[i]:get_id() == 9 then
                     hasnine = true
@@ -270,7 +276,17 @@ SMODS.Joker{
                 if context.full_hand[i]:get_id() == 10 then
                     hasten = true
                 end
+                if context.full_hand[i]:get_id() == 14 then
+                    hasace = true
+                end
+                if context.full_hand[i]:get_id() == 2 then
+                    hastwo = true
+                end
             end
+
+            if hasnine == true and hasten == true and hasace == true and hastwo == true then   
+                check_for_unlock({ type = "ach_twennyone" })
+			end
 
             if hasnine == true and hasten == true then   
 			return {
@@ -345,18 +361,21 @@ SMODS.Joker{
 		return { vars = { center.ability.extra.Xmult, center.ability.extra.additional, center.ability.extra.currentquip, center.ability.extra.Xquips }}
 	end,
 
-    calculate = function(self, card, context)
-        if G.playing_cards then                           
+    update = function(self, card, dt)
+        if G.jokers then
             local jackamount = G.playing_cards and calculate_jack_amount() or 0
             Xmult_mod = (card.ability.extra.additional * jackamount)
             card.ability.extra.Xmult = Xmult_mod
         end
-        
+    end,
+
+    calculate = function(self, card, context)
         if context.joker_main then
             card.ability.extra.currentquip = card.ability.extra.currentquip + 1
             if card.ability.extra.currentquip > 8 then
                 card.ability.extra.currentquip = 1
             end
+            if card.ability.extra.Xmult >= 5 then check_for_unlock({ type = "ach_jackblack" }) end
             return 
                 {
                 Xmult = Xmult_mod,
@@ -397,7 +416,8 @@ function SMODS.calculate_individual_effect(effect, scored_card, key, amount, fro
             end
         end
         if G.GAME.current_round.hands_left ~= 0 and islydiahere == true then
-            Yahimod.LydiaScale = Yahimod.LydiaScale * amount
+            Yahimod.LydiaScale = tNum(Yahimod.LydiaScale * amount)
+            if tNum(Yahimod.LydiaScale) >= tNum(1e100) then check_for_unlock({ type = "ach_lydia" }) end
             card_eval_status_text(_lydiacard,'jokers',nil,nil,nil,{message = "Stored X" ..amount.."!"})
             amount = 1
         end
@@ -439,18 +459,20 @@ SMODS.Joker{
     soul_pos = { x = 0, y = 1 },
 
     loc_vars = function(self, info_queue, center)
-        return { vars = { Yahimod.LydiaScale }}
+        return { vars = { tNum(Yahimod.LydiaScale) }}
     end,
 
     calculate = function(self, card, context)
-        if (G.GAME.current_round.hands_left == 0 and context.final_scoring_step and Yahimod.LydiaScale > 1) or context.forcetrigger then
+        if (tNum(G.GAME.current_round.hands_left) == tNum(0) and context.final_scoring_step and tNum(Yahimod.LydiaScale) ~= tNum(1)) or context.forcetrigger then
             return {
-                message = 'X' .. Yahimod.LydiaScale,
+                message = 'X' .. tNum(Yahimod.LydiaScale),
                 xmult = Yahimod.LydiaScale
             }
         end
-        if context.end_of_round and Yahimod.LydiaScale ~= 1 then
-            Yahimod.LydiaScale = 1
+        if context.end_of_round or context.setting_blind then
+            if tNum(Yahimod.LydiaScale) ~= tNum(1) then
+                Yahimod.LydiaScale = tNum(1)
+            end
         end
     end,
 
@@ -503,6 +525,7 @@ SMODS.Joker{
                 card.ability.extra.active = "Inactive"
 				local card = create_card('', G.consumeables, nil, nil, nil, nil, context.consumeable.config.center_key, 'lighttophat')
 				card:add_to_deck()
+                if card.config.center_key == "c_yahimod_opentolan" then check_for_unlock({ type = "ach_printer" }) end
 				G.consumeables:emplace(card)
                 return{message = "Yep, that's going in the blackmail folder",}
 			end
@@ -629,6 +652,7 @@ SMODS.Joker{
                 return{message = "-" .. card.ability.extra.loss,}
             else
                 card:start_dissolve({G.C.RED})
+                check_for_unlock({ type = "ach_jovial" })
                 return{
                     message = "-" .. card.ability.extra.loss,
                     sound = "yahimod_horsedeath",
@@ -730,26 +754,33 @@ SMODS.Joker{
     perishable_compat = false,
 
     pos = {x=0, y= 0},
-    config = { extra = {mult = 3, Xmult = 1.15}},
+    config = { extra = {mult = 3, Xmult = 1.15, triggersthishand = 0}},
 
     loc_vars = function(self, info_queue, center)
 		return { vars = { center.ability.extra.mult, center.ability.extra.Xmult }  }
 	end,
 
     calculate = function(self, card, context)
+    
     if context.cardarea == G.play and context.individual and context.other_card then
         local _trigger = false
         if context.other_card:get_id() == 13 then _trigger = true end
         if context.other_card:is_suit('Clubs') then _trigger = true end
         if context.other_card:is_suit('Spades') then _trigger = true end
         if _trigger == true then
+            card.ability.extra.triggersthishand = card.ability.extra.triggersthishand + 1
             return {
                 mult = card.ability.extra.mult,
                 Xmult_mod = card.ability.extra.Xmult,
                 message = "That's buckets!",
             }
-            end
         end
+    end
+    if context.post_joker then
+        if card.ability.extra.triggersthishand >= 5 then check_for_unlock({ type = "ach_buckets" }) end
+        card.ability.extra.triggersthishand = 0
+    end
+
     end,
 
     check_for_unlock = function(self, args)
@@ -973,7 +1004,7 @@ SMODS.Joker{
             card.ability.extra.chat = false
         end
 		if context.end_of_round and (G.GAME.blind:get_type() == 'Boss') and (card.ability.extra.triggered == false) then
-            if G.ARGS.chip_flames.real_intensity < 0.000001 then
+            if beatInOneHand() == false then
                 ease_ante(-1)
                 card_eval_status_text(card,'extra',nil,nil,nil,{message = "Hee-Hee!"})
                 card:start_dissolve({G.C.RED})
@@ -1463,6 +1494,7 @@ SMODS.Joker{
 
     add_to_deck = function(self, card, from_debuff)
         G.jokers.config.card_limit = G.jokers.config.card_limit + card.ability.extra.jokerslots
+        if card.edition and card.edition.type and card.edition.type == "negative" then check_for_unlock({ type = "ach_negkoda" }) end
     end,
 
     remove_from_deck = function(self, card, from_debuff)
@@ -1671,6 +1703,7 @@ SMODS.Joker{
                     G.jokers:emplace(card)
                 end
                 card:start_dissolve({G.C.RED})
+                check_for_unlock({ type = "ach_wood" })
                 G.P_CENTERS.j_yahimod_tree.pos.x = 0
                 play_sound("yahimod_woodbroke")
             else
@@ -1784,6 +1817,10 @@ SMODS.Joker{
             }
             card:start_dissolve()
             ease_dollars(7)
+        else
+            if toastercount == 1 then
+                check_for_unlock({ type = "ach_ballin" })
+            end
         end
     end,
 
@@ -1886,6 +1923,7 @@ SMODS.Joker{
     end
     card.ability.extra.xmulttotal = catcount * card.ability.extra.xmult
     if context.joker_main then
+        if card.ability.extra.xmulttotal >= card.ability.extra.xmult*5 then check_for_unlock({ type = "ach_joelmax" }) end
         return {
             color = G.C.RED,
             message = "x".. card.ability.extra.xmulttotal,
@@ -1919,6 +1957,7 @@ SMODS.Joker{
         text = { "Creates a {C:attention}random consumable{}",
                     "if your first hand contains",
                     "a scoring {C:attention}gold card{}",
+                    "{C:inactive}(Must have room)",
     },},
     atlas = 'piglin',
     rarity = 2,
@@ -1927,7 +1966,7 @@ SMODS.Joker{
     
     unlocked = true,
     discovered = true,
-    blueprint_compat = false,
+    blueprint_compat = true,
     eternal_compat = true,
     perishable_compat = true,
     enhancement_gate = 'm_gold',
@@ -1942,8 +1981,14 @@ SMODS.Joker{
 	end,
 
     calculate = function(self, card, context)
-        if context.cardarea == G.play and context.individual and context.other_card and G.GAME.current_round.hands_played == 0 then
-            if SMODS.has_enhancement(context.other_card, 'm_gold') then 
+        if context.before and G.GAME.current_round.hands_played == 0 then
+            local _hasgold = false
+            for i = 1, #context.scoring_hand do
+                if SMODS.has_enhancement(context.scoring_hand[i], 'm_gold') then
+                    _hasgold = true
+                end
+            end
+            if _hasgold == true and #G.consumeables.cards < G.consumeables.config.card_limit then 
                     
                     return{
                     G.E_MANAGER:add_event(Event({
@@ -1987,7 +2032,7 @@ SMODS.Joker{
     key = 'drwhatsapp',
     loc_txt= {
         name = 'Dr. Whatsapp',
-        text = { "Retriggers all {C:green}Whatsapp Seals{} twice",
+        text = { "Retriggers scored {C:green}Whatsapp Seals{} twice",
                     "If your first hand contains",
                     "{C:attention}only{} one card, applies",
                     "a {C:green}Whatsapp Seal{} to it",
@@ -2017,7 +2062,7 @@ SMODS.Joker{
         end
 
         if context.cardarea == G.play and context.individual and #G.play.cards == 1 and G.GAME.current_round.hands_played == 0 then
-            context.other_card.seal = "yahimod_whatsapp_seal"
+            context.other_card:set_seal("yahimod_whatsapp_seal",true,true)
             return {
                         message = "Whatsapp-ified!",
                         card = card,
@@ -2078,8 +2123,8 @@ SMODS.Joker{
             table.remove(_eligiblecards,_pickedid)
             local _picked2 = _eligiblecards[math.random(#_eligiblecards)]
             play_sound("yahimod_whatsapp")
-            G.hand.cards[_picked1].seal = "yahimod_whatsapp_seal"
-            G.hand.cards[_picked2].seal = "yahimod_whatsapp_seal"
+            G.hand.cards[_picked1]:set_seal("yahimod_whatsapp_seal",true,true)
+            G.hand.cards[_picked2]:set_seal("yahimod_whatsapp_seal",true,true)
         else
             return{
                 message = "How the fuck do you want me to do this"
@@ -2135,6 +2180,7 @@ SMODS.Joker{
 	end,
 
     add_to_deck = function(self, card, from_debuff)
+        check_for_unlock({ type = "ach_isthat" })
         G.GAME.current_round.free_rerolls = 2
         card.ability.extra.oldshopsize = G.GAME.shop.joker_max
         G.GAME.current_round.free_rerolls = 2
@@ -2180,6 +2226,7 @@ SMODS.Joker{
             G.shop:recalculate()
             G.GAME.current_round.free_rerolls = 2
             card.ability.extra.buffedodds = card.ability.extra.buffedodds + 0.3
+            if card.ability.extra.buffedodds > 110 then check_for_unlock({ type = "ach_yahilimit" }) end
             for i = 1, #G.shop_jokers.cards do
                 if math.random(0,100) < card.ability.extra.buffedodds then
                     G.shop_jokers.cards[i]:set_edition({negative = true}, true)
@@ -2421,9 +2468,9 @@ SMODS.Joker{
             for i = 1, #G.jokers.cards do
             if G.jokers.cards[i+1] then
             local _cardname = G.jokers.cards[i].config.center.name
-            if string.find(_cardname,"j_") then _cardname = G.jokers.cards[i].config.center.loc_txt.name end
+            if string.find(_cardname,"j_") and G.jokers.cards[i].config.center.loc_txt then _cardname = G.jokers.cards[i].config.center.loc_txt.name end
             local _cardnamenext = G.jokers.cards[i+1].config.center.name
-            if string.find(_cardnamenext,"j_") then _cardnamenext = G.jokers.cards[i+1].config.center.loc_txt.name end
+            if string.find(_cardnamenext,"j_") and G.jokers.cards[i+1].config.center.loc_txt then _cardnamenext = G.jokers.cards[i+1].config.center.loc_txt.name end
             if _cardnamenext and G.jokers.cards[i+1] then
                 if string.len(_cardnamenext) < string.len(_cardname) then _streak = false end
                 end
@@ -2491,7 +2538,7 @@ SMODS.Joker{
 
     calculate = function(self, card, context)
     if context.joker_main then
-        if math.random(1,6) == 1 then crashGame() end
+        if pseudorandom('damedane') < (G.GAME.probabilities.normal / card.ability.extra.chance) then crashGame() end
         return {
             color = G.C.RED,
             message = "+".. card.ability.extra.mult,
@@ -2583,9 +2630,7 @@ SMODS.Joker{
     pixel_size = { w = 71, h = 71  },
     rarity = 2,
     cost = 8,
-    pools = { ["Yahimodaddition"] = true },
-    
-    
+    pools = { ["Yahimodaddition"] = true },  
     unlocked = true,
     discovered = true,
     blueprint_compat = false,
@@ -2593,7 +2638,7 @@ SMODS.Joker{
     perishable_compat = false,
 
     pos = {x=0, y= 0},
-    config = { extra = {xmult = 2, chance=6}},
+    config = { extra = {xmult = 2, chance=6, roundssince=0}},
     
     loc_vars = function(self, info_queue, center)
 		return { vars = { center.ability.extra.xmult, G.GAME.probabilities.normal, center.ability.extra.chance}  }
@@ -2601,8 +2646,14 @@ SMODS.Joker{
 
 
     calculate = function(self, card, context)
+    if context.setting_blind then
+        card.ability.extra.roundssince = card.ability.extra.roundssince + 1
+    end
     if context.joker_main then
-        if pseudorandom('adobepremiere') < (G.GAME.probabilities.normal / card.ability.extra.chance) then crashGame() end
+        if pseudorandom('adobepremiere') < (G.GAME.probabilities.normal / card.ability.extra.chance) then 
+            crashGame()
+            if card.ability.extra.roundssince < 2 then check_for_unlock({ type = "ach_goddamnit" }) end
+        end
         return {
             color = G.C.RED,
             message = "x".. card.ability.extra.xmult,
@@ -2843,7 +2894,9 @@ SMODS.Joker{
             if G.jokers.cards[_myid - 1].ability.eternal ~= true then
                 _cardeaten = G.jokers.cards[_myid - 1]
                 card.ability.extra.payout = card.ability.extra.payout + math.max(1,math.floor(_cardeaten.sell_cost/2))
+                if card.ability.extra.payout >= 10 then check_for_unlock({ type = "ach_bigandround" }) end 
                 _cardeaten.getting_sliced = true
+
                 _cardeaten:start_dissolve()
                 _cardeaten = nil
                 return{message = "Yum!", sound = "yahimod_eat"}
@@ -2943,9 +2996,10 @@ SMODS.Joker{
         name = 'Half-Blueprint',
         text = { "Copies ability of",
                     "{C:attention}Joker{} to the right",
-                    "{C:green}#1# out of #2#{} times{}"}
+                    "{C:green}#3# out of #2#{} times{}"}
     },
     atlas = 'halfblueprint',
+    pixel_size = { w = 71 , h = 64 },
     rarity = 2,
     cost = 7,
     pools = {["Yahimodaddition"] = true},
@@ -2959,17 +3013,17 @@ SMODS.Joker{
     perishable_compat = true,
 
     pos = {x=0, y= 0},
-    config = { extra = { mainodds = 1, totalodds = 2, bptarget = 0 } },
+    config = { extra = { mainodds = 1, totalodds = 2, bptarget = 0, chance = 2} },
 
     loc_vars = function(self, info_queue, center)
-        return { vars = { center.ability.extra.mainodds, center.ability.extra.totalodds}  }
+        return { vars = { center.ability.extra.mainodds, center.ability.extra.totalodds, G.GAME.probabilities.normal }  }
 	end,
 
     calculate = function(self, card, context)
         local _myid = getJokerID(card)
         if G.jokers.cards[_myid + 1] then card.ability.extra.bptarget = G.jokers.cards[_myid + 1] end
 
-        if math.random(card.ability.extra.mainodds,card.ability.extra.totalodds) == 1 and context.retrigger_joker_check and not context.retrigger_joker and context.other_card ~= self then
+        if pseudorandom('halfblueprint') < (G.GAME.probabilities.normal / card.ability.extra.totalodds) and context.retrigger_joker_check and not context.retrigger_joker and context.other_card ~= self then
             if context.other_card == G.jokers.cards[getJokerID(card) + 1] then
                 return {
                     repetitions = 1,
@@ -3064,6 +3118,7 @@ SMODS.Joker{
             local _victim = card.ability.extra.target
             card.ability.extra.target = 0
             card.ability.extra.retriggers = card.ability.extra.retriggers + 1
+            if card.ability.extra.retriggers >= 10 then check_for_unlock({ type = "ach_bluenemonial" }) end
             return{ G.E_MANAGER:add_event(Event({
                     trigger = 'immediate',
                     blocking = false,
@@ -3355,6 +3410,7 @@ SMODS.Joker{
             if _myid == #G.jokers.cards and G.consumeables.cards[1] then
                 G.consumeables.cards[1]:start_dissolve()
                 card.ability.extra.multtotal = card.ability.extra.multtotal + card.ability.extra.multamt
+                if card.ability.extra.multtotal >= card.ability.extra.multamt*8 then check_for_unlock({ type = "ach_katana" }) end
                 return{message = "Slice!",
                 sound = "slice1",
                 }
@@ -3426,7 +3482,7 @@ SMODS.Joker{
                 discard_UI.config.object:update()
                 G.HUD:recalculate()
                     attention_text({
-                    text = text..mod,
+                    text = "+1",
                     scale = 0.8, 
                     hold = 0.7,
                     cover = discard_UI.parent,
@@ -3434,7 +3490,7 @@ SMODS.Joker{
                     align = 'cm',
                     })
                     attention_text({
-                    text = text..mod,
+                    text = "+1",
                     scale = 0.8, 
                     hold = 0.7,
                     cover = hand_UI.parent,
@@ -3592,6 +3648,9 @@ SMODS.Joker{
 
     calculate = function(self, card, context)
     if context.cry_press and card.states.hover.is == true then
+        if G.wiwidestroyed == nil then G.wiwidestroyed = 0 end
+        G.wiwidestroyed = G.wiwidestroyed + 1
+        if G.wiwidestroyed >= 5 then check_for_unlock({ type = "ach_violence" }) end 
         explodeCard(card)
     end
             
@@ -3641,7 +3700,7 @@ SMODS.Atlas{
 
 -- ultrakill coin click check
 userHasClicked = function(x,y)
-    if G.coinout then
+    if G.coinout and G.coinout.clickabletimer == 0 then
         local _card = nil
         for i = 1, #G.jokers.cards do
             if G.jokers.cards[i].ability.name == 'j_yahimod_ultrakill' then
@@ -3751,7 +3810,7 @@ G.FUNCS.play_cards_from_highlighted = function(e)
     --print("hooked!")
     if jokerExists("j_yahimod_ultrakill") then
         for i = 1, #G.jokers.cards do
-            if G.jokers.cards[i].ability.name == 'j_yahimod_ultrakill' then 
+            if G.jokers.cards[i].ability.name == 'j_yahimod_ultrakill' and G.jokers.cards[i].debuff == false then 
                 _joker = G.jokers.cards[i]
                 _trig = true
             end
@@ -3810,6 +3869,7 @@ end
 -- Hook so stuff is reset after finishing scoring
 local hook = G.FUNCS.evaluate_play
 G.FUNCS.evaluate_play = function(e)
+
     hook(e)
     G.coinout = nil
     G.hascoinbeenthrown = nil
@@ -3817,6 +3877,7 @@ G.FUNCS.evaluate_play = function(e)
     G.hascoinbeenhit = nil
     G.haltevaleventsent = nil
     G.haltingevaluation = nil
+
 end,
 
 
@@ -3872,6 +3933,8 @@ SMODS.Joker{
 
                 local howmanyincreases = (card.ability.extra.xmult - 2)/card.ability.extra.additional
                 local quipindex = math.min(8,1+howmanyincreases)
+                if (howmanyincreases + 1) >= 8 then check_for_unlock({ type = "ach_ultrakill" }) end
+
 
                 return
                 {
@@ -3907,6 +3970,12 @@ function throwCoin(posx,posy)
     G.coinout.y = posy
     G.coinout.yvel = 1
     G.coinout.xvel = math.random(-5,5)
+    G.coinout.clickabletimer = 0
+
+    if G.SETTINGS.GAMESPEED <= 1 then
+        G.coinout.yvel = 2
+        G.coinout.clickabletimer = 72/G.SETTINGS.GAMESPEED
+    end
 
     G.coinout.prevx = {}
     G.coinout.prevy = {}
@@ -3949,6 +4018,10 @@ SMODS.Joker{
         if context.setting_blind then
             card.sell_cost = math.floor(math.random(1,12)^math.random(0.4,1))
             return {message = "$"..card.sell_cost.."!"}
+        end
+
+        if context.selling_self == true then
+            if card.sell_cost >= 10 then check_for_unlock({ type = "ach_diamondhands" }) end
         end
     end,
 
@@ -4005,6 +4078,15 @@ SMODS.Joker{
                     end,
                     }))
             end
+            G.E_MANAGER:add_event(Event({
+                    trigger = 'immediate',
+                    blocking = false,
+                    delay = 0,
+                    func = function()  
+                        check_for_unlock({ type = "ach_why" })
+                        return true
+                    end,
+                    }))
             return {mult_mod = card.ability.extra.mult}
         end
     end,
@@ -4195,7 +4277,7 @@ SMODS.Joker{
         
 
 
-        if G.GAME.blind and string.len(G.GAME.blind.name) > 0 then G.FUNCS.homophobiacheck() end
+        if G.GAME.blind and string.len(G.GAME.blind.name) > 0 and self.debuff == false then G.FUNCS.homophobiacheck() end
     end,
 
     remove_from_deck = function(self, card, from_debuff)
@@ -4206,7 +4288,7 @@ SMODS.Joker{
 	end,
 
     calculate = function(self, card, context)
-        if context.setting_blind then
+        if context.setting_blind and card.debuff == false then
             if isEven(G.GAME.round+1) then -- it's +1 cuz the round number doesn't update until after we init this
                 card.ability.extra.oldhandsize = G.hand.config.card_limit
                 G.GAME.current_round.hands_left = G.GAME.current_round.hands_left + card.ability.extra.hand
@@ -4290,6 +4372,7 @@ SMODS.Joker{
 	end,
     
     calculate = function(self, card, context)
+        
         if string.find(G.GAME.current_round.current_hand.handname,"Flush") then
             G.E_MANAGER:add_event(Event({
             trigger = 'before',
@@ -4298,6 +4381,7 @@ SMODS.Joker{
             delay = 0.8,
             func = function()
                 G.GAME.current_round.current_hand.handname = string.gsub(G.GAME.current_round.current_hand.handname,"Flush","Plush")
+                return true
             end
             }))
         end
@@ -4311,6 +4395,7 @@ SMODS.Joker{
             }
         end
         if context.joker_main and card.ability.extra.multtotal > 0 then
+            if string.find(G.GAME.current_round.current_hand.handname,"Straight Plush") then check_for_unlock({ type = "ach_straightplush" }) end
             return {
                 mult = card.ability.extra.multtotal,
                 sound = "yahimod_pluh",
@@ -4501,6 +4586,8 @@ SMODS.Joker{
         if context.setting_blind then
             if pseudorandom('schmeebchair') < (G.GAME.probabilities.normal / card.ability.extra.chance) then
                 explodeCard(card)
+                if G.GAME.round_resets.ante <= 1 then check_for_unlock({ type = "ach_schmeebchairgone" }) end
+                
             end
         end
         if context.joker_main then
@@ -4556,6 +4643,16 @@ SMODS.Joker{
     
     calculate = function(self, card, context)
         if context.other_joker then
+            local _logcount = 0
+            for i = 1, #G.jokers.cards do
+                if G.jokers.cards[i].ability.name == 'j_yahimod_oaklog' then
+                _logcount = _logcount + 1 
+                end
+            end
+            if _logcount >= 4 then check_for_unlock({ type = "ach_parkourpro" }) end
+            if _logcount >= 12 then check_for_unlock({ type = "ach_parkourmaster" }) end
+
+            
             if context.other_joker.ability.name == 'j_yahimod_oaklog' then
                 G.E_MANAGER:add_event(Event({
                 func = function()
@@ -4818,6 +4915,7 @@ SMODS.Joker{
         local _xscale = love.graphics.getWidth()/1920
         local _yscale = love.graphics.getHeight()/1080
         local _factor = 1/(( _xscale + _yscale ) / 2)
+        if love.graphics.getWidth() < 256 and love.graphics.getHeight() < 192 then check_for_unlock({ type = "ach_retro" }) end
 
         card.ability.extra.mult = math.floor(_factor*100)/100
 
@@ -5009,6 +5107,7 @@ SMODS.Joker{
                 return{message = "Yum!",}
             else
                 card:start_dissolve({G.C.RED})
+                check_for_unlock({ type = "ach_yum" })
                 return{
                     message = "Eaten!",
                     sound = "yahimod_eat",
@@ -5025,13 +5124,243 @@ SMODS.Joker{
     end,
 }
 
+-- Jerma
+SMODS.Atlas{
+    key = 'thickjerma',
+    path = 'thickjerma.png',
+    px = 71,
+    py = 96,
+}
+
+SMODS.Joker{
+    key = 'thickjerma',
+    loc_txt= {
+        name = 'Happy Thanksgiving',
+        text = { "This Joker gains {C:red}+#1#{} Mult if played",
+                    "hand contains a {C:attention}Jerma{}",
+                    "{C:inactive}(Currently {C:red}+#2#{}{C:inactive} Mult){}",
+                    "Hope you had a great turkey day!",}
+    },
+    atlas = 'thickjerma',
+    rarity = 1,
+    cost = 5,
+    pools = { ["Yahimodaddition"] = true },
+    
+    
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = false,
+    perishable_compat = false,
+
+    pos = {x=0, y= 0},
+    config = { extra = {multamt = 3, multtotal = 0}},
+
+    loc_vars = function(self, info_queue, center)
+		return { vars = { center.ability.extra.multamt, center.ability.extra.multtotal }  }
+	end,
+    
+    calculate = function(self, card, context)
+        if context.before and next(context.poker_hands['yahimod_pkr_jerma']) then
+            card.ability.extra.multtotal = card.ability.extra.multtotal + card.ability.extra.multamt
+            return {
+                message = "Upgrade!",
+                sound = "yahimod_jermanoise",
+            }
+        end
+        if context.joker_main and card.ability.extra.multtotal > 0 then
+            return {
+                message = "+"..card.ability.extra.multtotal,
+                mult = card.ability.extra.multtotal,
+            }
+        end
+    end,
+
+    check_for_unlock = function(self, args)
+        if args.type == 'test' then --not a real type, just a joke
+            unlock_card(self)
+        end
+        unlock_card(self) --unlocks the card if it isnt unlocked
+    end,
+}
+
+-- moon
+SMODS.Atlas{
+    key = 'moon',
+    path = 'moon.png',
+    px = 71,
+    py = 96,
+}
+
+SMODS.Joker{
+    key = 'moon',
+    loc_txt= {
+        name = 'Moon',
+        text = { "If your hand contains {C:attention}5 cards,",
+                    "changes the {C:attention}suit{} of the {C:red}last",
+                    "card to that of the {C:green}first{} card",
+                    "{C:inactive}(Does not change scoring)",}
+    },
+    atlas = 'moon',
+    rarity = 2,
+    cost = 5,
+    pools = { ["Cat"] = true, ["Yahimodaddition"] = true },
+    
+    
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+
+    pos = {x=0, y= 0},
+    config = { extra = {multamt = 2, multtotal = 0}},
+
+    loc_vars = function(self, info_queue, center)
+        info_queue[#info_queue+1] = {key = 'yahimod_catcredit', set = 'Other', vars = { "kerouz" }}
+	end,
+    
+    calculate = function(self, card, context)
+        if context.before and #G.play.cards == 5 then
+            SMODS.change_base(G.play.cards[5], G.play.cards[1].base.suit)
+            return {
+                message = "Meow!",
+            }
+        end
+    end,
+
+    check_for_unlock = function(self, args)
+        if args.type == 'test' then --not a real type, just a joke
+            unlock_card(self)
+        end
+        unlock_card(self) --unlocks the card if it isnt unlocked
+    end,
+}
+
+-- jojo
+SMODS.Atlas{
+    key = 'jojo',
+    path = 'jojo.png',
+    px = 71,
+    py = 96,
+}
+
+SMODS.Joker{
+    key = 'jojo',
+    loc_txt= {
+        name = 'JoJoker',
+        text = { "Your next draw is...",
+                    "{C:attention}#1#",
+                    "{C:attention}#2#",
+                    "{C:attention}#3#",
+                    "{C:attention}#4#",
+                    "{C:attention}#5#",
+                "TOYU?!",}
+    },
+    atlas = 'jojo',
+    rarity = 1,
+    cost = 6,
+    pools = { ["Yahimodaddition"] = true },
+    
+    
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = false,
+    perishable_compat = false,
+
+    pos = {x=0, y= 0},
+    config = { extra = {nexthand = {"...","...","...","...","..."}}},
+
+    loc_vars = function(self, info_queue, center)
+		return { vars = { center.ability.extra.nexthand[1],center.ability.extra.nexthand[2],center.ability.extra.nexthand[3],center.ability.extra.nexthand[4],center.ability.extra.nexthand[5] }  }
+	end,
+
+    update = function(self, card, front)
+        if jokerExists("j_yahimod_jojo") then
+            if G.deck and #G.deck.cards >= 1 then
+                for i = 1, math.min(5,#G.deck.cards) do
+                    local _index = (#G.deck.cards - i + 1)
+                    card.ability.extra.nexthand[i] = G.deck.cards[_index].base.name
+                end
+            end
+        else
+            for i = 1, 5 do
+                card.ability.extra.nexthand[i] = "..."
+            end
+        end
+    end,
+
+    check_for_unlock = function(self, args)
+        if args.type == 'test' then --not a real type, just a joke
+            unlock_card(self)
+        end
+        unlock_card(self) --unlocks the card if it isnt unlocked
+    end,
+}
+
+-- Completionist
+SMODS.Atlas{
+    key = 'completionist',
+    path = 'completionist.png',
+    px = 71,
+    py = 96,
+}
+
+SMODS.Joker{
+    key = 'completionist',
+    loc_txt= {
+        name = 'The Completionist',
+        text = { "{X:mult,C:white}X#2#{} Mult",
+                    "for every {C:attention}achievement{}",
+                    "obtained",
+                    "{C:inactive}(Currently {X:mult,C:white}X#1#{} {C:inactive}Mult)"}
+    },
+    atlas = 'completionist',
+    rarity = 3,
+    cost = 10,
+    pools = { ["Yahimodaddition"] = true },
+    
+    
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = false,
+    perishable_compat = false,
+
+    pos = {x=0, y= 0},
+    config = { extra = {xmult = 1, xmultadd = 0.15}},
+    
+    loc_vars = function(self, info_queue, center)
+		return { vars = { center.ability.extra.xmult, center.ability.extra.xmultadd}  }
+	end,
+
+    update = function(self, card, dt)
+        if G.jokers then
+            local achamount = calculate_achievements() or 0
+            Xmult_mod = (card.ability.extra.xmultadd * achamount)
+            card.ability.extra.xmult = 1+Xmult_mod
+        end
+    end,
+
+    calculate = function(self, card, context)
+    if context.joker_main then
+        return {
+            color = G.C.RED,
+            message = "x".. card.ability.extra.xmult,
+            Xmult_mod = card.ability.extra.xmult
+        }
+        end
+    end,
 
 
-
-
-
-
-
+    check_for_unlock = function(self, args)
+        if args.type == 'test' then --not a real type, just a joke
+            unlock_card(self)
+        end
+        unlock_card(self) --unlocks the card if it isnt unlocked
+    end,
+}  
 
 
 
@@ -5157,8 +5486,9 @@ function love.keypressed(key)
         end
         if (isdeerhere == true) then
             if #G.jokers.cards < G.jokers.config.card_limit then
-                if math.random(1,500) == 1 then
+                if pseudorandom('deer') < (G.GAME.probabilities.normal / 500) then
                     card_eval_status_text(G.jokers.cards[deerid],'extra',nil,nil,nil,{message = "Wait a minute."})
+                    check_for_unlock({ type = "ach_waitaminute" })
                     addHorse()
                 else
                     local card = create_card('Joker', G.Jokers, nil, nil, nil, nil, 'j_yahimod_deer', 'deer')
@@ -5226,7 +5556,11 @@ end
 
 function decrementingTickEvent(type,tick)
     if type == "G.showlaughingcat" then 
-        if tick == 547 then play_sound("yahimod_catlaughing") addHorse() end
+        if tick == 547 then 
+            play_sound("yahimod_catlaughing") 
+            addHorse() 
+            
+        end
     end
 
     if type == "G.showcrash" then
@@ -5243,6 +5577,8 @@ function decrementingTickEvent(type,tick)
 
     --horse swaps play and discard
     if type == "swapbuttons" and math.fmod(Yahimod.ticks,100) == 0 and math.random(1,6) == 1 then
+        if G.SETTINGS.play_button_pos_backup == nil then G.SETTINGS.play_button_pos_backup = G.SETTINGS.play_button_pos end
+
         local _oldbutton = G.SETTINGS.play_button_pos
         if _oldbutton == 1 then G.SETTINGS.play_button_pos = 2 else G.SETTINGS.play_button_pos = 1 end
         if G.buttons then
@@ -5296,6 +5632,11 @@ function decrementingTickEvent(type,tick)
     --ultrakill coin
     if type == "G.coinout" and math.fmod(Yahimod.ticks,2) == 0 then
 
+        -- vibe stuff
+        if G.coinout.clickabletimer > 0 then 
+           G.coinout.clickabletimer = G.coinout.clickabletimer - 1
+        end
+
         if #G.coinout.prevx > 5 then 
             table.remove(G.coinout.prevx,1)
             table.remove(G.coinout.prevy,1)
@@ -5304,11 +5645,25 @@ function decrementingTickEvent(type,tick)
         table.insert(G.coinout.prevy,G.coinout.y)
         
 
-        G.coinout.x = G.coinout.x + G.coinout.xvel
-        G.coinout.y = G.coinout.y + G.coinout.yvel
+        
+        
+        if G.SETTINGS.GAMESPEED <= 1 then
+            G.coinout.x = G.coinout.x + G.coinout.xvel*G.SETTINGS.GAMESPEED*0.5
+            G.coinout.y = G.coinout.y + G.coinout.yvel*G.SETTINGS.GAMESPEED*0.5
+        else
+            G.coinout.x = G.coinout.x + G.coinout.xvel
+            G.coinout.y = G.coinout.y + G.coinout.yvel
+        end
+        
+
+
 
         if G.coinout.yvel < 45 and math.fmod(Yahimod.ticks,3) == 0 then
-            G.coinout.yvel = G.coinout.yvel + 1
+            if G.SETTINGS.GAMESPEED <= 1 then
+                G.coinout.yvel = G.coinout.yvel + G.SETTINGS.GAMESPEED/2
+            else
+                G.coinout.yvel = G.coinout.yvel + 1
+            end
         end
 
         if G.coinout.y > love.graphics.getHeight()*1.2 then
@@ -5419,6 +5774,12 @@ function Game:update(dt)
 
         if G.dino then dinoTick() end
 
+        -- achievement check naneinf
+        if G.GAME.chips and tNum(G.GAME.chips) > tNum(9e307) then check_for_unlock({ type = "ach_okyouwin" }) end
+
+        -- achievement check cantaloupefish
+        if G.showfish and G.showcantaloupe and G.showfish > 0 and G.showcantaloupe > 0 then check_for_unlock({ type = "ach_cantaloupefish" }) end
+
         if jokerExists("j_yahimod_subwaysurfers") then decrementingTickEvent("j_yahimod_subwaysurfers",0) end
         if jokerExists("j_yahimod_moroccaninternet") then decrementingTickEvent("j_yahimod_moroccaninternet",0) end
 
@@ -5473,9 +5834,15 @@ function Game:update(dt)
     
     
     if G.GAME.blind and not G.GAME.blind.disabled and G.GAME.blind.in_blind and G.GAME.blind.name == 'boss_vibe' then
-        G.SETTINGS.GAMESPEED = 0.25
+
+        local _gspeed = 0.25
+        if jokerExists("j_yahimod_ultrakill") then
+            _gspeed = 0.25
+        end 
+
+        G.SETTINGS.GAMESPEED = _gspeed
         else
-        if G.GAME.normalgamespeed == nil and G.SETTINGS.GAMESPEED ~= 0.25 then G.GAME.normalgamespeed = G.SETTINGS.GAMESPEED end
+        if G.GAME.normalgamespeed == nil and G.SETTINGS.GAMESPEED ~= _gspeed then G.GAME.normalgamespeed = G.SETTINGS.GAMESPEED end
     end
     
 
@@ -5645,15 +6012,20 @@ function love.draw()
         local _he = 50 * math.max(3,     (1/(_btm - G.coinout.y - 100)*love.graphics.getHeight()))
         local _thin = math.max(2,24*((G.coinout.y-100)/_btm))
 
-        local _staralpha = math.min(88,100*((G.coinout.y-100)/_btm))/100
+        if G.coinout.clickabletimer == 0 then
+            local _staralpha = math.min(88,100*((G.coinout.y-100)/_btm))/100
 
-        local _starpoints = { _cx,_cy-_thin,     _cx+_wi,_cy-_he,    _cx+_thin,_cy,      _cx+_wi,_cy+_he,    _cx,_cy+_thin,    _cx-_wi,_cy+_he,    _cx-_thin,_cy,   _cx-_wi,_cy-_he,  _cx,_cy-_thin  }
-        
-        love.graphics.setColor(255, 230, 0, _staralpha)
-        love.graphics.polygon( "fill", _starpoints )
+            local _starpoints = { _cx,_cy-_thin,     _cx+_wi,_cy-_he,    _cx+_thin,_cy,      _cx+_wi,_cy+_he,    _cx,_cy+_thin,    _cx-_wi,_cy+_he,    _cx-_thin,_cy,   _cx-_wi,_cy-_he,  _cx,_cy-_thin  }
+            
+            
+            love.graphics.setColor(255, 230, 0, _staralpha)
+            love.graphics.polygon( "fill", _starpoints )
+            love.graphics.setColor(1, 1, 1, 1)
+        else
+            love.graphics.setColor(1, 1, 1, 0.25)
+        end
 
         local _imgindex = math.fmod(Yahimod.ticks, 4) + 1
-        love.graphics.setColor(1, 1, 1, 1)
         love.graphics.draw(Yahimod.coinimage, Yahimod.coinsprite[_imgindex], G.coinout.x, G.coinout.y,math.fmod(Yahimod.ticks, 360),_xscale,_yscale,32*_xscale,32*_yscale)
 
     end
@@ -5722,6 +6094,14 @@ function love.draw()
         if Yahimod.fishpng == nil then Yahimod.fishpng = loadThatFuckingImage("fishondafloo.png") end
         love.graphics.setColor(1, 1, 1, 1) 
         love.graphics.draw(Yahimod.fishpng, 0*_xscale*2, 0*_yscale*2,0,_xscale*2*2,_yscale*2*2)
+    end
+
+    -- pineapple
+    if G.GAME.modifiers.yahimod_pineapple and not G.SETTINGS.paused then
+        --love.graphics.print("ticks:" .. Yahimod.ticks, 500, 35)
+        if Yahimod.pineapplepng == nil then Yahimod.pineapplepng = loadThatFuckingImage("pineapple.png") end
+        love.graphics.setColor(1, 1, 1, 1) 
+        love.graphics.draw(Yahimod.pineapplepng, 0*_xscale*2, 0*_yscale*2,0,_xscale*2*2,_yscale*2*2)
     end
 
     -- cantaloupe
@@ -5860,6 +6240,7 @@ function addHorse()
     card.sell_cost = 4
     card:add_to_deck()
     G.jokers:emplace(card)
+    check_for_unlock({ type = "ach_fellforit" })
     play_sound("yahimod_horse")
 end
 
@@ -5872,6 +6253,23 @@ function calculate_jack_amount()
         end
     end
     return count
+end
+
+function calculate_achievements()
+    local count = 0
+    local ACH = (smods and smods.achievements) or (SMODS and SMODS.Achievements) or {}
+    local total, earned = 0, 0
+    local needle = "ach_yahimod"
+
+    for key, ach in pairs(ACH) do
+        if type(key) == "string" and key:sub(1, #needle) == needle then
+            total = total + 1
+            if ach and ach.earned == true then
+                earned = earned + 1
+            end
+        end
+    end
+    return earned
 end
 
 -- from cryptid/items/misc_joker.lua
@@ -5888,9 +6286,11 @@ end
 -- Override for the special cat koda is, to allow her to join your joker inventory even without needing space 
 local buyspace = G.FUNCS.check_for_buy_space
 G.FUNCS.check_for_buy_space = function(card)
-	if
-		(card.ability.name == "j_yahimod_koda")
-	then
+	if (card.ability.name == "j_yahimod_koda") then
+		return true
+	end
+    if (card.ability.name == "Vampire") and card.edition and (card.edition.type == "yahimod_evil") then
+        check_for_unlock({ type = "ach_infinitecraft" })
 		return true
 	end
 	return buyspace(card)

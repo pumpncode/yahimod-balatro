@@ -69,7 +69,7 @@ SMODS.Tag{
         play_sound("yahimod_horsedeath")
             for _, card in ipairs(G.playing_cards) do
                 if card.seal == "yahimod_horse_seal" then
-                    card.seal = nil
+                    card:set_seal(nil,true,true)
                 end
             end
             for i = 1, #G.jokers.cards do

@@ -5,19 +5,17 @@
 	"author": [
 		"Yahiamice"
 	],
-	"description": "is that yaha mouse",
+	"description": "is that yaha mouse twitch.tv/yahiamice youtube.com/yahiamicelive",
 	"prefix": "yahimod",
 	"main_file": "core.lua",
 	"priority": 0,
 	"badge_colour": "7a2eb6",
 	"badge_text_colour": "FFFFFF",
-	"version": "2.0",
+	"version": "2.31",
 	"dependencies": [
 		"Lovely (>=0.7)",
 		"Balatro (>=1.0.1o)"
 	],
 	"conflicts": [
-		"Talisman (<=2.0.2)",
-		"Cryptid (<<0.5.4)"
 	]
 }

@@ -40,7 +40,36 @@ SMODS.Seal {
     calculate = function(self, card, context)
         -- main_scoring context is used whenever the card is scored
         
+        local _whatsappcounter = 0
+        local _whatsappcounter2 = 0
+
+        if G.hand.highlighted[1] then
+            for i = 1, #G.hand.highlighted do
+                if G.hand.highlighted[i].seal == "yahimod_whatsapp_seal" then _whatsappcounter = _whatsappcounter + 1 end
+            end
+        end
+        
+        if G.play.cards[1] then
+            for i = 1, #G.play.cards do
+                if G.play.cards[i].seal == "yahimod_whatsapp_seal" then _whatsappcounter2 = _whatsappcounter2 + 1 end
+            end
+        end
+
+        if _whatsappcounter >= 5 or _whatsappcounter2 >= 5 then
+            G.E_MANAGER:add_event(Event({
+            trigger = 'after',
+            blocking = false,
+            blockable = false,
+            delay = 0.7,
+            func = function()
+                G.GAME.current_round.current_hand.handname = "Group Chat"
+                if G.GAME.current_round.current_hand.handname == "Group Chat" then return true end
+            end
+            }))
+        end
+
         if context.main_scoring and context.cardarea == G.play then
+            if string.find(G.GAME.current_round.current_hand.handname,"Group Chat") then check_for_unlock({ type = "ach_groupchat" }) end
             return {
                 G.E_MANAGER:add_event(Event({func = function()
                 play_sound('yahimod_whatsapp')
@@ -180,7 +209,7 @@ SMODS.Seal {
                 repetitions = 1,
                 G.E_MANAGER:add_event(Event({func = function()
                 if pseudorandom('ifunny') < (G.GAME.probabilities.normal / 3) then 
-                    card.seal = nil 
+                    card:set_seal(nil,true,true)
                     card_eval_status_text(card,'extra',nil,nil,nil,{message = "Cropped!"})
                     play_sound("cardFan2")
                 end

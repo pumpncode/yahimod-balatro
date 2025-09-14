@@ -1,5 +1,4 @@
--- these are funny functions for debug & bit purposes and probably aren't actually used in the main core of the mod. you can probably call these through DebugPlus if you feel Quirky
-
+-- need these initialized before everything else
 
 function everythingRedSteelKing()
 	for _, card in ipairs(G.playing_cards) do
@@ -10,6 +9,41 @@ function everythingRedSteelKing()
 		card:set_seal('Red')
 		card.config.card.value = "King"
 		card:set_ability("m_steel")
+	end
+end
+
+-- returns true if any nested key or string value contains needle
+function Gdeep_findstr(t, needle, seen)
+  if type(t) ~= "table" then return false end
+  seen = seen or {}
+  if seen[t] then return false end
+  seen[t] = true
+
+  local n = tostring(needle):lower()
+  for k, v in pairs(t) do
+    if (type(k) == "string" and k:lower():find(n, 1, true))
+    or (type(v) == "string" and v:lower():find(n, 1, true)) then
+      return true
+    end
+    if type(v) == "table" and Gdeep_findstr(v, needle, seen) then
+      return true
+    end
+  end
+  return false
+end
+
+
+
+function beatInOneHand()
+	return SMODS.last_hand_oneshot == true
+end
+
+function oneCard()
+	for _, card in ipairs(G.playing_cards) do
+			if card ~= G.playing_cards[1] then 
+			card:start_dissolve()
+			card = nil
+			end
 	end
 end
 

@@ -9,6 +9,8 @@ function create_UIBox_custom_video1(name, buttonname)
   video_file:getSource():setVolume(G.SETTINGS.SOUND.volume*G.SETTINGS.SOUND.game_sounds_volume/(100*10))
   vid_sprite.video = video_file
   video_file:play()
+  
+  if name == "nuuh" then check_for_unlock({ type = "ach_nuuh" }) end
 
   local t = create_UIBox_generic_options({ back_delay = 2 , back_label = buttonname, colour = G.C.BLACK, padding = 0, contents = {
     {n=G.UIT.O, config={object = vid_sprite}} }})
